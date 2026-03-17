@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../assets/logo.svg';
@@ -22,6 +22,10 @@ function Login() {
     draggable: true,
     theme: "dark",
   }
+
+  useEffect(() => {
+    if (localStorage.getItem("chat-app-user")) navigate("/");
+  }, [navigate]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -64,7 +68,7 @@ function Login() {
         </div>
         <input type="text" placeholder="用户名" name="username" value={values.username} onChange={handleChange} />
         <input type="password" placeholder="密码" name="password" value={values.password} onChange={handleChange} />
-        <button type="submit" onClick={handleSubmit}>登录</button>
+        <button onClick={handleSubmit}>登录</button>
         <span>还没有用户？<Link to="/register">去注册</Link></span>
       </form>
       <ToastContainer />
