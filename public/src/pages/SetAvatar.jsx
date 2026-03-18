@@ -25,22 +25,41 @@ export default function SetAvatar() {
     theme: "dark",
   };
 
+  useEffect(() => {
+    if (!localStorage.getItem("chat-app-user")) {
+      navigate("/login");
+    }
+  }, [navigate]);
+
   const setProfilePicture = async () => {
     if (selectedAvatar === undefined) {
       toast.error("请选择一个头像", toastOptions);
     } else {
-      const user = await JSON.parse(localStorage.getItem("chat-app-user"));
-      const { data } = await axios.post(`${setAvatarRoute}/${user._id}`, {
-        image: selectedAvatar,
-      });
-
-      if (data.isSet) {
-        user.isAvatarImageSet = true;
-        user.avatarImage = data.image;
-        localStorage.setItem("chat-app-user", JSON.stringify(user));
-        navigate("/");
-      } else {
-        toast.error("设置头像失败，请重试！", toastOptions);
+      const raw = localStorage.getItem("chat-app-user");
+      if (!raw) {
+        toast.error("请先登录", toastOptions);
+        return;
+      }
+      const user = JSON.parse(raw);
+      if (!user?._id) {
+        toast.error("用户信息无效，请重新登录", toastOptions);
+        return;
+      }
+      try {
+        const { data } = await axios.post(`${setAvatarRoute}/${user._id}`, {
+          image: selectedAvatar,
+        });
+        console.log(data);
+        if (data.isSet) {
+          user.isAvatarImageSet = true;
+          user.avatarImage = data.image;
+          localStorage.setItem("chat-app-user", JSON.stringify(user));
+          navigate("/");
+        } else {
+          toast.error("设置头像失败，请重试！", toastOptions);
+        }
+      } catch (e) {
+        toast.error("无法连接服务器，确认后端已启动", toastOptions);
       }
     }
 
