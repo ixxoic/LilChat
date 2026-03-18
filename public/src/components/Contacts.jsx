@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Logo from '../assets/logo.svg';
 
-export default function Contacts({ contacts, currentUser }) {
+export default function Contacts({ contacts, currentUser, changeChat }) {
   const [currentUserName, setCurrentUserName] = useState(undefined);
   const [currentUserImage, setCurrentUserImage] = useState(undefined);
   const [currentSelected, setCurrentSelected] = useState(undefined);
 
   useEffect(() => {
-    console.log(contacts);
     if (currentUser) {
       setCurrentUserImage(currentUser.avatarImage);
       setCurrentUserName(currentUser.username);
@@ -16,7 +15,8 @@ export default function Contacts({ contacts, currentUser }) {
   }, [currentUser]);
 
   const changeCurrentChat = (index, contact) => {
-
+    setCurrentSelected(index);
+    changeChat(contact);
   }
 
   return (
@@ -32,22 +32,7 @@ export default function Contacts({ contacts, currentUser }) {
               contacts.map((contact, index) => {
                 return (
                   <div className={`contact ${index === currentSelected ? "selected" : ""}`}
-                    key={index} >
-                    <div className="avatar">
-                      <img src={contact.avatarImage} alt="avatar" />
-                    </div>
-                    <div className="username">
-                      <h3>{contact.username}</h3>
-                    </div>
-                  </div>
-                )
-              })
-            }
-            {
-              contacts.map((contact, index) => {
-                return (
-                  <div className={`contact ${index === currentSelected ? "selected" : ""}`}
-                    key={index} >
+                    key={index} onClick={() => changeCurrentChat(index, contact)}>
                     <div className="avatar">
                       <img src={contact.avatarImage} alt="avatar" />
                     </div>
@@ -84,6 +69,7 @@ const Container = styled.div`
     align-items: center;
     justify-content: center;
     gap: 1rem;
+    padding: 1rem 0;
 
     img {
       height: 2rem;
@@ -133,7 +119,7 @@ const Container = styled.div`
         }
       }
     }
-    .selcted {
+    .selected {
       background-color: #9a86f3;
     }
   }
@@ -143,6 +129,7 @@ const Container = styled.div`
      justify-content: center;
      align-items: center;
      gap: 2rem;
+     padding: 0.5rem 0;
      .avatar {
        img {
          height: 4rem;
