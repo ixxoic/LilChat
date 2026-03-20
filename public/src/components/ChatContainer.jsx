@@ -8,7 +8,7 @@ import Messages from './Messages';
 export default function ChatContainer({ currentChat }) {
 
   const handleSendMessage = async (msg) => {
-
+    alert(msg);
   }
 
   return (

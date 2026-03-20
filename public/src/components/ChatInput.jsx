@@ -1,20 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import Picker from 'emoji-picker-react';
 import { IoMdSend } from 'react-icons/io';
 import { BsEmojiSmileFill } from 'react-icons/bs';
 
 
-export default function ChatInput() {
+export default function ChatInput(handleSendMsg) {
+
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const handleEmojiPickerHideShow = () => {
+    setShowEmojiPicker(!showEmojiPicker);
+  }
+
+  // v4 的 onEmojiClick 签名是 (emojiData, event)，第一个参数才有 .emoji
+  const handleEmojiClick = (emojiData) => {
+    if (!emojiData?.emoji) return;
+    setMsg((prev) => prev + emojiData.emoji);
+  };
+
+  const sendChat = (event) => {
+    event.preventDefault();
+    if (msg.length > 0) {
+      handleSendMsg(msg);
+      setMsg("");
+    }
+  }
 
   return (
     <Container>
       <div className="button-container">
         <div className="emoji">
-          <BsEmojiSmileFill />
+          <BsEmojiSmileFill onClick={handleEmojiPickerHideShow} />
+          {showEmojiPicker && <Picker onEmojiClick={handleEmojiClick} />}
         </div>
-        <form className="input-container">
-          <input type="text" placeholder="输入消息..." />
+        <form className="input-container" onSubmit={(e) => sendChat(e)}>
+          <input type="text" placeholder="输入消息..." value={msg} onChange={(e) => setMsg(e.target.value)} />
           <button className="submit">
             <IoMdSend />
           </button>
@@ -46,6 +68,40 @@ const Container = styled.div`
         font-size: 1.5rem;
         color: #ffff00c8;
         cursor: pointer;
+      }
+
+      .epr-main {
+        position: absolute;
+        bottom: 3.5rem;
+        left: 0;
+        z-index: 999;
+        background-color: #080420;
+        box-shadow: 0 5px 10px #9a86f3;
+        border-color: #9a86f3;
+
+        .epr-emoji-list::-webkit-scrollbar,
+        .epr-body::-webkit-scrollbar {
+          background-color: #080420;
+          width: 5px;
+
+          &-thumb {
+            background-color: #9a86f3;
+          }
+        }
+
+        .epr-category-nav .epr-cat-btn {
+          filter: contrast(0);
+        }
+
+        .epr-search-container,
+        .epr-search-container input {
+          background-color: transparent;
+          border-color: #9a86f3; 
+        }
+
+        .epr-emoji-category-label {
+          background-color: #080420;
+        }
       }
     }
   }
