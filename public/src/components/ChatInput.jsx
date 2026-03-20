@@ -5,7 +5,7 @@ import { IoMdSend } from 'react-icons/io';
 import { BsEmojiSmileFill } from 'react-icons/bs';
 
 
-export default function ChatInput(handleSendMsg) {
+export default function ChatInput({ handleSendMessage }) {
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [msg, setMsg] = useState("");
@@ -23,7 +23,7 @@ export default function ChatInput(handleSendMsg) {
   const sendChat = (event) => {
     event.preventDefault();
     if (msg.length > 0) {
-      handleSendMsg(msg);
+      handleSendMessage?.(msg);
       setMsg("");
     }
   }
