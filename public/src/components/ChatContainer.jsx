@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import Logout from './Logout';
 import ChatInput from './ChatInput';
-import Messages from './Messages';
 import { sendMessageRoute, getAllMessagesRoute } from '../utils/APIRoutes';
 import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 
 
-
-export default function ChatContainer({ currentChat, currentUser }) {
+export default function ChatContainer({ currentChat, currentUser, socket }) {
 
   const [messages, setMessages] = useState([]);
+  const [arrivalMessage, setArrivalMessage] = useState(null);
+  const scrollRef = useRef();
 
   useEffect(() => {
     if (!currentUser || !currentChat) return;
@@ -45,7 +46,47 @@ export default function ChatContainer({ currentChat, currentUser }) {
       to: currentChat._id,
       message: msg,
     });
+
+
+    socket.current.emit("send-msg", {
+      to: currentChat._id,
+      from: currentUser._id,
+      message: msg,
+    });
+
+    const msgs = [...messages, { fromSelf: true, message: msg }];
+    setMessages(msgs);
+
   };
+
+  useEffect(() => {
+    if (!socket?.current) return;
+
+    const currentSocket = socket.current;
+
+    const handler = (msg) => {
+      setArrivalMessage({ fromSelf: false, message: msg });
+    };
+
+    currentSocket.on("recieve-msg", handler);
+
+    // 清理：避免重复注册导致回调多次触发
+    return () => {
+      currentSocket.off("recieve-msg", handler);
+    };
+  }, [socket]);
+
+
+  // 每次有新消息到达时会触发
+
+  useEffect(() => {
+    arrivalMessage && setMessages((prev) => [...prev, arrivalMessage]);
+  }, [arrivalMessage]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
 
   return (
     <>
@@ -67,7 +108,7 @@ export default function ChatContainer({ currentChat, currentUser }) {
               {
                 messages.map((message) => {
                   return (
-                    <div>
+                    <div ref={scrollRef} key={uuidv4()}>
                       <div className={`message ${message.fromSelf ? 'sended' : 'received'}`}>
                         <div className="content">
                           <p>{message.message}</p>
@@ -127,6 +168,15 @@ const Container = styled.div`
     flex-direction: column;
     gap: 1rem;
     overflow: auto;
+
+    &::-webkit-scrollbar {
+      width: 0.2rem;
+      &-thumb {
+        background-color: #ffffff39;
+        width: 0.1rem;
+        border-radius: 1rem;
+      }
+    }
 
     .message {
       display: flex;
