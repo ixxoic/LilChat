@@ -5,7 +5,7 @@ import loader from '../assets/loader.gif';
 import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css"
 import axios from "axios";
-import { setAvatarRoute } from '../utils/APIRoutes';
+import { meRoute, setAvatarRoute } from '../utils/APIRoutes';
 
 // 使用 DiceBear 头像 API，支持直接作为 img src，无 CORS/403 问题
 const AVATAR_API = "https://api.dicebear.com/7.x/avataaars/svg";
@@ -16,6 +16,7 @@ export default function SetAvatar() {
   const [avatars, setAvatars] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedAvatar, setSelectedAvatar] = useState(undefined);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const toastOptions = {
     position: "bottom-right",
@@ -26,34 +27,30 @@ export default function SetAvatar() {
   };
 
   useEffect(() => {
-    if (!localStorage.getItem("chat-app-user")) {
-      navigate("/login");
-    }
+    const checkMe = async () => {
+      try {
+        const { data } = await axios.get(meRoute);
+        setCurrentUser(data);
+      } catch (e) {
+        navigate("/login");
+      }
+    };
+    checkMe();
   }, [navigate]);
 
   const setProfilePicture = async () => {
     if (selectedAvatar === undefined) {
       toast.error("请选择一个头像", toastOptions);
     } else {
-      const raw = localStorage.getItem("chat-app-user");
-      if (!raw) {
+      if (!currentUser?._id) {
         toast.error("请先登录", toastOptions);
         return;
       }
-      const user = JSON.parse(raw);
-      if (!user?._id) {
-        toast.error("用户信息无效，请重新登录", toastOptions);
-        return;
-      }
       try {
-        const { data } = await axios.post(`${setAvatarRoute}/${user._id}`, {
+        const { data } = await axios.post(`${setAvatarRoute}/${currentUser._id}`, {
           image: selectedAvatar,
         });
-        console.log(data);
         if (data.isSet) {
-          user.isAvatarImageSet = true;
-          user.avatarImage = data.image;
-          localStorage.setItem("chat-app-user", JSON.stringify(user));
           navigate("/");
         } else {
           toast.error("设置头像失败，请重试！", toastOptions);

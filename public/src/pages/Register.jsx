@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css"
 import axios from "axios";
-import { registerRoute } from '../utils/APIRoutes';
+import { registerRoute, meRoute } from '../utils/APIRoutes';
 
 function Register() {
   const navigate = useNavigate();
@@ -36,7 +36,15 @@ function Register() {
   }
 
   useEffect(() => {
-    if (localStorage.getItem("chat-app-user")) navigate("/");
+    const checkMe = async () => {
+      try {
+        await axios.get(meRoute);
+        navigate("/");
+      } catch (e) {
+        // 未登录，留在注册页
+      }
+    };
+    checkMe();
   }, [navigate]);
 
   const handleSubmit = async (event) => {
@@ -50,7 +58,6 @@ function Register() {
       });
       if (!data.status) toast.error(data.msg, toastOptions);
       else {
-        localStorage.setItem("chat-app-user", JSON.stringify(data.user));
         navigate("/");  //导航到聊天界面
       }
     }
@@ -94,7 +101,7 @@ function Register() {
         <input type="email" placeholder="邮箱" name="email" value={values.email} onChange={handleChange} />
         <input type="password" placeholder="密码" name="password" value={values.password} onChange={handleChange} />
         <input type="password" placeholder="确认密码" name="confirmPassword" value={values.confirmPassword} onChange={handleChange} />
-        <button type="submit" onClick={handleSubmit}>注册</button>
+        <button type="submit">注册</button>
         <span>已有用户？<Link to="/login">登录</Link></span>
       </form>
       <ToastContainer />

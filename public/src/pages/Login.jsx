@@ -5,7 +5,7 @@ import Logo from '../assets/logo.svg';
 import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css"
 import axios from "axios";
-import { loginRoute } from '../utils/APIRoutes';
+import { loginRoute, meRoute } from '../utils/APIRoutes';
 
 function Login() {
   const navigate = useNavigate();
@@ -24,7 +24,15 @@ function Login() {
   }
 
   useEffect(() => {
-    if (localStorage.getItem("chat-app-user")) navigate("/");
+    const checkMe = async () => {
+      try {
+        await axios.get(meRoute);
+        navigate("/");
+      } catch (e) {
+        // 未登录，留在登录页
+      }
+    };
+    checkMe();
   }, [navigate]);
 
   const handleSubmit = async (event) => {
@@ -37,7 +45,6 @@ function Login() {
       });
       if (!data.status) toast.error(data.msg, toastOptions);
       else {
-        localStorage.setItem("chat-app-user", JSON.stringify(data.user));
         navigate("/");  //导航到聊天界面
       }
     }
@@ -68,7 +75,7 @@ function Login() {
         </div>
         <input type="text" placeholder="用户名" name="username" value={values.username} onChange={handleChange} />
         <input type="password" placeholder="密码" name="password" value={values.password} onChange={handleChange} />
-        <button onClick={handleSubmit}>登录</button>
+        <button type="submit">登录</button>
         <span>还没有用户？<Link to="/register">去注册</Link></span>
       </form>
       <ToastContainer />

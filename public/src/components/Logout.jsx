@@ -2,11 +2,17 @@ import React from 'react';
 import styled from 'styled-components';
 import { BiPowerOff } from 'react-icons/bi';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { logoutRoute } from '../utils/APIRoutes';
 
 export default function Logout() {
   const navigate = useNavigate();
   const handleClick = async () => {
-    localStorage.removeItem("chat-app-user");
+    try {
+      await axios.post(logoutRoute);
+    } catch (e) {
+      // 即使请求失败，也允许跳回登录页
+    }
     navigate("/login");
   };
 

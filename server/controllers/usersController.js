@@ -1,5 +1,29 @@
-const User = require('../model/userModel');
+const User = require('../models/userModel');
 const bcrypt = require('bcrypt');
+const generateToken = require("../utils/generateToken");
+
+//获取当前登录用户信息
+module.exports.getCurrentMe = async (req, res, next) => {
+  try {
+    res.json(req.user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 退出登录：清除 JWT cookie
+module.exports.logout = async (req, res, next) => {
+  try {
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+    res.json({ status: true, msg: "已退出登录" });
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports.register = async (req, res, next) => {
   try {
@@ -14,6 +38,9 @@ module.exports.register = async (req, res, next) => {
       username,
       password: hashedPassword,
     });
+
+    generateToken(user._id, res);
+
     const safeUser = user.toObject();
     delete safeUser.password;
     return res.json({ status: true, user: safeUser });
@@ -30,6 +57,8 @@ module.exports.login = async (req, res, next) => {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) return res.json({ msg: "用户名或密码错误", status: false });
+
+    generateToken(user._id, res);
 
     const safeUser = user.toObject();
     delete safeUser.password;
