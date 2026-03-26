@@ -40,22 +40,5 @@ const io = new Server(server, {
   },
 });
 
-const onlineUsers = new Map();
-
-// 监听新连接
-io.on("connection", (socket) => {
-  // 记录该连接对应的用户 socketId（userId -> socket.id）
-
-  // 客户端发送事件：socket.emit("add-user", userId)
-  socket.on("add-user", (userId) => {
-    onlineUsers.set(userId, socket.id);
-  });
-
-  // 发送消息转发给接收方
-  socket.on("send-msg", (data) => {
-    const sendUserSocket = onlineUsers.get(data.to);   //找到接收方的socket.id
-    if (sendUserSocket) {
-      socket.to(sendUserSocket).emit("recieve-msg", data.message);  //如果接收方在线，就把消息发给那个socket
-    }
-  });
-});
+const socketHandler = require("./utils/socket");
+socketHandler(io);

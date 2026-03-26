@@ -32,12 +32,40 @@ function Chat() {
     run();
   }, [navigate]);
 
-  //一旦有当前用户，我们立即连接socket
+  // 有当前用户后建立 Socket，连接成功再上报 add-user（与个人房间 join 对齐）
   useEffect(() => {
-    if (currentUser) {
-      socket.current = io(host);
-      socket.current.emit("add-user", currentUser._id);
+    if (!currentUser) return;
+
+    // 优先使用 websocket，失败时自动回退到 polling
+    const s = io(host, {
+      transports: ["websocket", "polling"],
+      timeout: 20000,
+    });
+    socket.current = s;
+
+    const onConnect = () => {
+      console.log("[socket] connected:", s.id);
+      s.emit("add-user", currentUser._id);
+    };
+
+    if (s.connected) {
+      onConnect();
+    } else {
+      s.on("connect", onConnect);
     }
+
+    const onConnectError = (err) => console.error("[socket] connect_error:", err?.message || err);
+    const onDisconnect = (reason) => console.warn("[socket] disconnected:", reason);
+    s.on("connect_error", onConnectError);
+    s.on("disconnect", onDisconnect);
+
+    return () => {
+      s.off("connect", onConnect);
+      s.off("connect_error", onConnectError);
+      s.off("disconnect", onDisconnect);
+      s.disconnect();
+      socket.current = undefined;
+    };
   }, [currentUser]);
 
   //加载完currentUser后，获取所有用户
